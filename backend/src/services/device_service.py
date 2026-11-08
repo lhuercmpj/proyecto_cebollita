@@ -2,8 +2,8 @@ from datetime import UTC, datetime
 
 import httpx
 
-from app.config import Settings
-from app.schemas.measurement import DeviceMeasurement
+from src.config import Settings
+from src.schemas.measurement import DeviceMeasurement
 
 
 class DeviceUnavailableError(RuntimeError):
@@ -15,7 +15,6 @@ async def request_measurement(
     sample_index: int | None = None,
 ) -> DeviceMeasurement:
     params = {} if sample_index is None else {"sample_index": sample_index}
-    headers = {"X-API-Key": settings.sensor_api_key}
     url = f"{settings.sensor_device_url.rstrip('/')}/api/medir"
     body = {"timestamp_unix": int(datetime.now(UTC).timestamp())}
 
@@ -24,7 +23,6 @@ async def request_measurement(
             response = await client.post(
                 url,
                 params=params,
-                headers=headers,
                 json=body,
             )
             response.raise_for_status()

@@ -4,11 +4,11 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-import app.db_models  # noqa: F401 - registra las tablas en Base.metadata
-from app.api.measurements import router as measurements_router
-from app.config import get_settings
-from app.database import SessionLocal, create_tables
-from app.services.model_data import MODEL_VERSION
+import src.db_models  # noqa: F401 - registra las tablas en Base.metadata
+from src.api.measurements import router as measurements_router
+from src.config import get_settings
+from src.database import SessionLocal, create_tables
+from src.services.model_data import MODEL_VERSION
 
 
 @asynccontextmanager
@@ -18,11 +18,11 @@ async def lifespan(_: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
-app.include_router(measurements_router)
+src = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+src.include_router(measurements_router)
 
 
-@app.get("/health", tags=["system"])
+@src.get("/health", tags=["system"])
 def health() -> dict[str, str]:
     database_status = "available"
     try:

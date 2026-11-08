@@ -15,8 +15,6 @@ class Settings(BaseSettings):
 
     app_name: str = "Cebollita API"
     database_url: str = "postgresql+psycopg://cebollita:cebollita_dev@localhost:5433/cebollita"
-    app_api_key: str = Field(default="change-me", min_length=1)
-    sensor_api_key: str = Field(default="change-me-too", min_length=1)
     sensor_device_url: str = "http://localhost:8081"
     # El firmware toma 30 muestras separadas por 300 ms (unos 9 s), por lo que
     # 10 s dejaba muy poco margen para la red y la serializacion.

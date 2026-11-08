@@ -6,7 +6,7 @@ de entradas, clases y hashes SHA-256 tanto del adjunto original como de la
 copia normalizada del repositorio.
 
 La implementacion Python de referencia esta en
-`../backend/app/services/prediction_service.py`. No reemplaza al modelo de la
+`../backend/src/services/prediction_service.py`. No reemplaza al modelo de la
 placa: se utiliza para el simulador y para detectar divergencias entre ambas
 implementaciones.
 

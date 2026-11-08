@@ -6,6 +6,7 @@ Archivos fuente que alimentarán el historial y el RAG del asistente.
 
 - `sensors/`: dataset histórico de la Tarea 2, con sus campos y unidades documentados.
 - `references/`: documentos científicos sobre fitonias y el cuidado de la especie.
+- `codigo_esp32/codigo_final.ino`: copia de referencia del firmware propuesto para la ESP32.
 
 Las nuevas mediciones de la ESP32 no se guardan como archivos en esta carpeta:
 el backend las persiste en PostgreSQL. Si más adelante se exporta ese historial

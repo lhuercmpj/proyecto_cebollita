@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.database import Base
+from src.database import Base
 
 
 class Measurement(Base):

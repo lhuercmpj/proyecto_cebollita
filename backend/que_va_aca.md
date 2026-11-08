@@ -4,11 +4,11 @@
 
 API de FastAPI, recepción de sensores, servicios de conversación y componentes de Telegram.
 
-- `app/main.py`: crear FastAPI y registrar rutas.
-- `app/api/`: endpoints.
-- `app/services/`: lógica compartida.
-- `app/telegram_bot/`: manejadores de Telegram y ejecución de polling.
-- `app/jobs/`: tareas periódicas.
+- `src/main.py`: crear FastAPI y registrar rutas.
+- `src/api/`: endpoints.
+- `src/services/`: lógica compartida.
+- `src/bot_telegram/`: manejadores de Telegram y ejecución de polling.
+- `src/jobs/`: tareas periódicas.
 - `requirements.txt`: dependencias de Python; fijar versiones probadas al implementarlas.
 - `.env.example`: nombres de configuración sin secretos.
 - `.env`: valores locales reales, excluidos de Git.
@@ -19,7 +19,6 @@ API de FastAPI, recepción de sensores, servicios de conversación y componentes
 TELEGRAM_BOT_TOKEN=
 GEMINI_API_KEY=
 TELEGRAM_CHAT_ID=
-SENSOR_API_KEY=
 REPORT_INTERVAL_MINUTES=30
 ```
 

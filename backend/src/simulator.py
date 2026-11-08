@@ -1,22 +1,21 @@
 from datetime import UTC, datetime
-from hmac import compare_digest
 from itertools import count
 from threading import Lock
 from time import monotonic
 from typing import Annotated
 
-from fastapi import Body, FastAPI, Header, HTTPException, Query, status
+from fastapi import Body, FastAPI, Query
 from pydantic import BaseModel, Field
 
-from app.config import get_settings
-from app.schemas.measurement import (
+from src.config import get_settings
+from src.schemas.measurement import (
     DeviceData,
     DeviceMeasurement,
     DeviceProbability,
     DeviceQuality,
 )
-from app.services.model_data import TEST_X
-from app.services.prediction_service import predict
+from src.services.model_data import TEST_X
+from src.services.prediction_service import predict
 
 app = FastAPI(title="Cebollita ESP32 Simulator", version="0.2.0")
 settings = get_settings()
@@ -29,19 +28,8 @@ class MeasurementRequest(BaseModel):
     timestamp_unix: int | None = Field(default=None, ge=1_577_836_800, le=4_102_444_799)
 
 
-def authorize(x_api_key: str | None) -> None:
-    if x_api_key is None or not compare_digest(x_api_key, settings.sensor_api_key):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Clave invalida",
-        )
-
-
 @app.get("/api/salud", tags=["system"])
-def health(
-    x_api_key: Annotated[str | None, Header()] = None,
-) -> dict[str, str | int | bool]:
-    authorize(x_api_key)
+def health() -> dict[str, str | int | bool]:
     return {
         "ok": True,
         "ip": "simulator",
@@ -58,10 +46,7 @@ def measure(
         int | None,
         Query(ge=0, le=len(TEST_X) - 1),
     ] = None,
-    x_api_key: Annotated[str | None, Header()] = None,
 ) -> DeviceMeasurement:
-    authorize(x_api_key)
-
     with counter_lock:
         sequence = next(counter)
     selected_index = sequence % len(TEST_X) if sample_index is None else sample_index

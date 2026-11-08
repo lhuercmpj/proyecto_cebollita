@@ -14,11 +14,9 @@ referencia para verificar el firmware.
 | GET | `/api/measurements/latest` | Devuelve la lectura mas reciente. |
 | GET | `/api/measurements?limit=50` | Lista el historial reciente. |
 
-Los endpoints POST requieren `X-API-Key`.
-
 ## Contrato del dispositivo
 
-El dispositivo expone `POST /api/medir` y valida `X-API-Key`. El backend envia
+El dispositivo expone `POST /api/medir` sin autenticacion. El backend envia
 `timestamp_unix` en el cuerpo y espera el mismo JSON producido por el firmware:
 lecturas dentro de `datos`, prediccion en `clase`, `estado` y `confianza`, el
 arreglo `probabilidades` y los indicadores de `calidad`. El esquema exacto se

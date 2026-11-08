@@ -1,4 +1,4 @@
-from app.schemas.measurement import (
+from src.schemas.measurement import (
     DeviceData,
     DeviceMeasurement,
     DeviceProbability,

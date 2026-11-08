@@ -1,7 +1,7 @@
 from math import exp
 
-from app.schemas.measurement import Prediction
-from app.services.model_data import (
+from src.schemas.measurement import Prediction
+from src.services.model_data import (
     BIAS1,
     BIAS2,
     CLASS_NAMES,

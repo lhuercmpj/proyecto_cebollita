@@ -4,21 +4,20 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import verify_app_api_key
-from app.config import get_settings
-from app.database import get_session
-from app.schemas.measurement import (
+from src.config import get_settings
+from src.database import get_session
+from src.schemas.measurement import (
     DeviceMeasurement,
     MeasurementIngestResponse,
     MeasurementRead,
 )
-from app.services.device_service import DeviceUnavailableError, request_measurement
-from app.services.measurement_service import (
+from src.services.device_service import DeviceUnavailableError, request_measurement
+from src.services.measurement_service import (
     latest_measurement,
     list_measurements,
     save_measurement,
 )
-from app.services.prediction_service import predict
+from src.services.prediction_service import predict
 
 router = APIRouter(prefix="/api/measurements", tags=["measurements"])
 SessionDependency = Annotated[Session, Depends(get_session)]
@@ -51,7 +50,6 @@ def prediction_matches(payload: DeviceMeasurement) -> bool:
 @router.post(
     "/request",
     response_model=MeasurementIngestResponse,
-    dependencies=[Depends(verify_app_api_key)],
 )
 async def request_and_store_measurement(
     session: SessionDependency,
@@ -78,7 +76,6 @@ async def request_and_store_measurement(
 @router.post(
     "",
     response_model=MeasurementIngestResponse,
-    dependencies=[Depends(verify_app_api_key)],
 )
 def ingest_measurement(
     payload: DeviceMeasurement,

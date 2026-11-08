@@ -20,13 +20,11 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: ["uvicorn", "app.simulator:app", "--host", "0.0.0.0", "--port", "8081"]
-    environment:
-      SENSOR_API_KEY: ${SENSOR_API_KEY:-change-me-too}
+    command: ["uvicorn", "src.simulator:app", "--host", "0.0.0.0", "--port", "8081"]
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD", "python", "-c", "import os, urllib.request; r=urllib.request.Request('http://localhost:8081/api/salud', headers={'X-API-Key': os.environ['SENSOR_API_KEY']}); urllib.request.urlopen(r)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/api/salud')"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -37,8 +35,6 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cebollita}:${POSTGRES_PASSWORD:-cebollita_dev}@db:5432/${POSTGRES_DB:-cebollita}
-      APP_API_KEY: ${APP_API_KEY:-change-me}
-      SENSOR_API_KEY: ${SENSOR_API_KEY:-change-me-too}
       SENSOR_DEVICE_URL: ${SENSOR_DEVICE_URL:-http://simulator:8081}
       SENSOR_TIMEOUT_SECONDS: ${SENSOR_TIMEOUT_SECONDS:-20}
     ports:

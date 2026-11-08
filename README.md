@@ -11,7 +11,7 @@ Primer avance del backend para la Tarea 3. Incluye:
 
 ## Inicio rapido
 
-1. Copiar `.env.example` a `.env` y cambiar las claves de desarrollo.
+1. Copiar `.env.example` a `.env` si se desea cambiar la configuracion local.
 2. Construir e iniciar los servicios:
 
    ```powershell
@@ -19,11 +19,7 @@ Primer avance del backend para la Tarea 3. Incluye:
    ```
 
 3. Abrir Swagger en <http://localhost:8000/docs>.
-4. Ejecutar `POST /api/measurements/request` con el encabezado:
-
-   ```text
-   X-API-Key: valor de APP_API_KEY
-   ```
+4. Ejecutar `POST /api/measurements/request`.
 
 El backend llamara a `POST /api/medir` del simulador, verificara la prediccion y
 guardara la lectura en PostgreSQL.
@@ -31,11 +27,9 @@ guardara la lectura en PostgreSQL.
 ## Ejemplo con PowerShell
 
 ```powershell
-$headers = @{ "X-API-Key" = "change-me" }
 Invoke-RestMethod `
   -Method Post `
-  -Uri "http://localhost:8000/api/measurements/request?sample_index=0" `
-  -Headers $headers
+  -Uri "http://localhost:8000/api/measurements/request?sample_index=0"
 ```
 
 Consultar la ultima medicion:
@@ -49,8 +43,8 @@ de verificacion del modelo.
 
 ## Sustituir el simulador por la ESP32
 
-La placa debe exponer `POST /api/medir`, validar `X-API-Key` y responder con el
-JSON implementado por el firmware: `clase`, `estado`, `confianza`,
+La placa debe exponer `POST /api/medir` y responder con el JSON implementado
+por el firmware: `clase`, `estado`, `confianza`,
 `timestamp_unix`, `datos`, `probabilidades` y `calidad`. El backend envia la
 hora UTC en el cuerpo de cada solicitud y asume que tanto el DHT11 como el LM35
 producen lecturas validas.

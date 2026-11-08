@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.services.model_data import CLASS_NAMES
+from src.services.model_data import CLASS_NAMES
 
 
 FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]

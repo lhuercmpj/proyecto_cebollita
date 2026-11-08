@@ -5,9 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db_models.measurement import Measurement
-from app.schemas.measurement import DeviceMeasurement, MeasurementRead
-from app.services.model_data import MODEL_VERSION
+from src.db_models.measurement import Measurement
+from src.schemas.measurement import DeviceMeasurement, MeasurementRead
+from src.services.model_data import MODEL_VERSION
 
 
 def to_read(model: Measurement) -> MeasurementRead:

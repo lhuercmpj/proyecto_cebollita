@@ -1,7 +1,7 @@
 import pytest
 
-from app.services.model_data import CLASS_NAMES, TEST_P, TEST_X, TEST_Y
-from app.services.prediction_service import predict
+from src.services.model_data import CLASS_NAMES, TEST_P, TEST_X, TEST_Y
+from src.services.prediction_service import predict
 
 
 @pytest.mark.parametrize(

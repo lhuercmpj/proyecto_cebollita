@@ -1,9 +1,9 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.measurement import DeviceMeasurement
-from app.services.model_data import CLASS_NAMES, TEST_X
-from app.services.prediction_service import predict
+from src.schemas.measurement import DeviceMeasurement
+from src.services.model_data import CLASS_NAMES, TEST_X
+from src.services.prediction_service import predict
 
 
 def valid_payload() -> dict[str, object]:
