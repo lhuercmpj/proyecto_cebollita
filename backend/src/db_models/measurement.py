@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String
+from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
@@ -9,11 +9,18 @@ from src.database import Base
 
 class Measurement(Base):
     __tablename__ = "measurements"
+    # Una medicion queda identificada por la planta y el instante en que la
+    # placa la tomo: repetir el mismo payload no crea una fila nueva.
+    __table_args__ = (
+        UniqueConstraint("plant_id", "measured_at", name="uq_measurement_plant_time"),
+    )
 
     measurement_id: Mapped[str] = mapped_column(String(100), primary_key=True)
     plant_id: Mapped[str] = mapped_column(String(50), index=True)
     measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # esp32 | historico_tarea2 (procedencia de la lectura)
+    source: Mapped[str] = mapped_column(String(30), default="esp32", index=True)
 
     humedad_tierra: Mapped[float] = mapped_column(Float)
     luz: Mapped[float] = mapped_column(Float)

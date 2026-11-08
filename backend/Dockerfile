@@ -12,8 +12,9 @@ RUN pip install --no-cache-dir -r requirements-dev.txt
 COPY backend/src ./src
 COPY backend/tests ./tests
 COPY models ./models
+COPY data/references ./data/references
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:src", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

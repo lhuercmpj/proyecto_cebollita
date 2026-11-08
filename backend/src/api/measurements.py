@@ -1,50 +1,39 @@
-from math import isclose
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from src.config import get_settings
-from src.database import get_session
+from src.database import SessionLocal, get_session
 from src.schemas.measurement import (
     DeviceMeasurement,
     MeasurementIngestResponse,
     MeasurementRead,
 )
 from src.services.device_service import DeviceUnavailableError, request_measurement
-from src.services.measurement_service import (
-    latest_measurement,
-    list_measurements,
-    save_measurement,
-)
-from src.services.prediction_service import predict
+from src.services.ingest_service import prediction_matches, store_device_measurement
+from src.services.measurement_service import latest_measurement, list_measurements
+from src.services.notification_service import notify_measurement
+from src.services.telegram_client import TelegramNotifier
 
 router = APIRouter(prefix="/api/measurements", tags=["measurements"])
 SessionDependency = Annotated[Session, Depends(get_session)]
 
+__all__ = ["prediction_matches", "router"]
 
-def prediction_matches(payload: DeviceMeasurement) -> bool:
-    sensors = payload.datos
-    backend_prediction = predict(
-        humedad_tierra=sensors.humedad_tierra,
-        luz=sensors.luz,
-        humedad_aire=sensors.humedad_aire,
-        temp_promedio=sensors.temp_promedio,
-    )
-    device_probabilities = {
-        item.estado: item.probabilidad for item in payload.probabilidades
-    }
-    return (
-        backend_prediction.class_index == payload.clase
-        and all(
-            isclose(
-                backend_prediction.probabilities[class_name],
-                device_probabilities[class_name],
-                abs_tol=1e-5,
-            )
-            for class_name in backend_prediction.probabilities
+
+async def evaluate_alerts(measurement: MeasurementRead) -> None:
+    """Las alertas se evaluan al llegar la lectura, sin esperar al reporte."""
+
+    settings = get_settings()
+    with SessionLocal() as session:
+        await notify_measurement(
+            session,
+            measurement,
+            settings,
+            TelegramNotifier(settings.telegram_bot_token),
+            include_report=False,
         )
-    )
 
 
 @router.post(
@@ -53,23 +42,23 @@ def prediction_matches(payload: DeviceMeasurement) -> bool:
 )
 async def request_and_store_measurement(
     session: SessionDependency,
+    background_tasks: BackgroundTasks,
     sample_index: Annotated[int | None, Query(ge=0, le=11)] = None,
 ) -> MeasurementIngestResponse:
     """Solicita una medicion a la ESP32 (o al simulador) y la persiste."""
 
+    settings = get_settings()
     try:
-        payload = await request_measurement(get_settings(), sample_index=sample_index)
+        payload = await request_measurement(settings, sample_index=sample_index)
     except DeviceUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
         ) from exc
 
-    measurement, created = save_measurement(
-        session,
-        payload,
-        backend_prediction_matches=prediction_matches(payload),
-    )
+    measurement, created = store_device_measurement(session, payload, settings)
+    if created:
+        background_tasks.add_task(evaluate_alerts, measurement)
     return MeasurementIngestResponse(created=created, measurement=measurement)
 
 
@@ -80,14 +69,13 @@ async def request_and_store_measurement(
 def ingest_measurement(
     payload: DeviceMeasurement,
     session: SessionDependency,
+    background_tasks: BackgroundTasks,
 ) -> MeasurementIngestResponse:
     """Entrada alternativa para una ESP32 configurada en modo push."""
 
-    measurement, created = save_measurement(
-        session,
-        payload,
-        backend_prediction_matches=prediction_matches(payload),
-    )
+    measurement, created = store_device_measurement(session, payload, get_settings())
+    if created:
+        background_tasks.add_task(evaluate_alerts, measurement)
     return MeasurementIngestResponse(created=created, measurement=measurement)
 
 

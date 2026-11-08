@@ -13,6 +13,17 @@ referencia para verificar el firmware.
 | POST | `/api/measurements` | Permite recibir una lectura en modo push. |
 | GET | `/api/measurements/latest` | Devuelve la lectura mas reciente. |
 | GET | `/api/measurements?limit=50` | Lista el historial reciente. |
+| POST | `/api/chat` | Chat con Cebollita (mismo servicio que Telegram). |
+
+## Procesos
+
+| Comando | Proceso |
+| --- | --- |
+| `uvicorn src.main:app` | API |
+| `python -m src.jobs.sensor_report_job` | Medicion, reporte y alertas periodicas (una instancia) |
+| `python -m src.bot_telegram.main` | Bot de Telegram (polling, una instancia) |
+| `python -m src.rag.ingest` | Indexar `data/references` en pgvector |
+| `python -m src.rag.import_history ARCHIVO.csv` | Importar el dataset historico |
 
 ## Contrato del dispositivo
 

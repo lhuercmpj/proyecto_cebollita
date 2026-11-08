@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-import src.db_models  # noqa: F401 - registra las tablas en Base.metadata
+from src.api.chat import router as chat_router
 from src.api.measurements import router as measurements_router
 from src.config import get_settings
 from src.database import SessionLocal, create_tables
@@ -18,12 +18,13 @@ async def lifespan(_: FastAPI):
 
 
 settings = get_settings()
-src = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
-src.include_router(measurements_router)
+app = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
+app.include_router(measurements_router)
+app.include_router(chat_router)
 
 
-@src.get("/health", tags=["system"])
-def health() -> dict[str, str]:
+@app.get("/health", tags=["system"])
+def health() -> dict[str, str | bool]:
     database_status = "available"
     try:
         with SessionLocal() as session:
@@ -37,5 +38,6 @@ def health() -> dict[str, str]:
         "model": "loaded",
         "model_version": MODEL_VERSION,
         "sensor_device_url": settings.sensor_device_url,
+        "gemini_configured": bool(settings.gemini_api_key),
+        "telegram_configured": bool(settings.telegram_bot_token),
     }
-

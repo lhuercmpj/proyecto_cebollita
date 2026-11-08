@@ -1,3 +1,17 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cebollita}:${POSTGRES_PASSWORD:-cebollita_dev}@db:5432/${POSTGRES_DB:-cebollita}
+  SENSOR_DEVICE_URL: ${SENSOR_DEVICE_URL:-http://simulator:8081}
+  SENSOR_TIMEOUT_SECONDS: ${SENSOR_TIMEOUT_SECONDS:-20}
+  REPORT_INTERVAL_MINUTES: ${REPORT_INTERVAL_MINUTES:-30}
+  STALE_MARGIN_MINUTES: ${STALE_MARGIN_MINUTES:-10}
+  ALERT_REPEAT_MINUTES: ${ALERT_REPEAT_MINUTES:-180}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  TELEGRAM_ALLOWED_CHAT_IDS: ${TELEGRAM_ALLOWED_CHAT_IDS:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+  GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-gemini-embedding-001}
+
 services:
   db:
     image: pgvector/pgvector:0.8.7-pg17-bookworm
@@ -33,12 +47,11 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cebollita}:${POSTGRES_PASSWORD:-cebollita_dev}@db:5432/${POSTGRES_DB:-cebollita}
-      SENSOR_DEVICE_URL: ${SENSOR_DEVICE_URL:-http://simulator:8081}
-      SENSOR_TIMEOUT_SECONDS: ${SENSOR_TIMEOUT_SECONDS:-20}
+    environment: *backend-env
     ports:
       - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +63,31 @@ services:
       timeout: 5s
       retries: 10
 
+  # Medicion automatica + reporte + alertas cada REPORT_INTERVAL_MINUTES.
+  # Una sola instancia (advisory lock en PostgreSQL).
+  scheduler:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "src.jobs.sensor_report_job"]
+    environment: *backend-env
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Bot de Telegram (polling). Requiere TELEGRAM_BOT_TOKEN.
+  bot:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "src.bot_telegram.main"]
+    environment: *backend-env
+    restart: unless-stopped
+    profiles: ["telegram"]
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   postgres_data:
-

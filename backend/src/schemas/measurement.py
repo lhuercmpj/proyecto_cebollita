@@ -136,6 +136,7 @@ class DeviceMeasurement(BaseModel):
 class MeasurementRead(BaseModel):
     measurement_id: str
     plant_id: str
+    source: str = "esp32"
     measured_at: datetime
     received_at: datetime
     sensors: SensorReadings

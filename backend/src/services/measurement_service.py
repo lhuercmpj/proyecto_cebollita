@@ -1,21 +1,24 @@
 from datetime import UTC, datetime
-from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from src.database import as_utc
 from src.db_models.measurement import Measurement
 from src.schemas.measurement import DeviceMeasurement, MeasurementRead
 from src.services.model_data import MODEL_VERSION
+
+PLANT_ID = "cebollita"
 
 
 def to_read(model: Measurement) -> MeasurementRead:
     return MeasurementRead(
         measurement_id=model.measurement_id,
         plant_id=model.plant_id,
-        measured_at=model.measured_at,
-        received_at=model.received_at,
+        source=model.source,
+        measured_at=as_utc(model.measured_at),
+        received_at=as_utc(model.received_at),
         sensors={
             "humedad_tierra": model.humedad_tierra,
             "luz": model.luz,
@@ -35,20 +38,46 @@ def to_read(model: Measurement) -> MeasurementRead:
     )
 
 
+def measurement_id_for(plant_id: str, timestamp_unix: int, source: str = "esp32") -> str:
+    """Identificador deterministico: el mismo instante de medicion da el mismo id."""
+
+    return f"{source}-{plant_id}-{timestamp_unix}"
+
+
+def find_measurement(session: Session, plant_id: str, measured_at: datetime) -> Measurement | None:
+    statement = select(Measurement).where(
+        Measurement.plant_id == plant_id,
+        Measurement.measured_at == measured_at,
+    )
+    return session.scalar(statement)
+
+
 def save_measurement(
     session: Session,
     payload: DeviceMeasurement,
     backend_prediction_matches: bool,
+    plant_id: str = PLANT_ID,
+    source: str = "esp32",
 ) -> tuple[MeasurementRead, bool]:
-    measurement_id = f"esp32-{uuid4()}"
+    """Guarda una medicion. Devuelve ``(medicion, creada)``.
+
+    Si ya existe una medicion de la misma planta en el mismo instante (por
+    ejemplo, la placa reenvio el mismo JSON), se devuelve la existente con
+    ``creada=False`` en lugar de duplicarla.
+    """
+
+    measured_at = datetime.fromtimestamp(payload.timestamp_unix, tz=UTC)
+    existing = find_measurement(session, plant_id, measured_at)
+    if existing is not None:
+        return to_read(existing), False
+
     sensors = payload.datos
-    probabilities = {
-        item.estado: item.probabilidad for item in payload.probabilidades
-    }
+    probabilities = {item.estado: item.probabilidad for item in payload.probabilidades}
     model = Measurement(
-        measurement_id=measurement_id,
-        plant_id="cebollita",
-        measured_at=datetime.fromtimestamp(payload.timestamp_unix, tz=UTC),
+        measurement_id=measurement_id_for(plant_id, payload.timestamp_unix, source),
+        plant_id=plant_id,
+        source=source,
+        measured_at=measured_at,
         received_at=datetime.now(UTC),
         humedad_tierra=sensors.humedad_tierra,
         luz=sensors.luz,
@@ -68,19 +97,56 @@ def save_measurement(
     try:
         session.commit()
     except IntegrityError:
+        # Otro proceso guardo la misma medicion en paralelo.
         session.rollback()
-        raise
+        existing = find_measurement(session, plant_id, measured_at)
+        if existing is None:
+            raise
+        return to_read(existing), False
     session.refresh(model)
     return to_read(model), True
 
 
-def latest_measurement(session: Session) -> MeasurementRead | None:
-    statement = select(Measurement).order_by(Measurement.measured_at.desc()).limit(1)
+def latest_measurement(session: Session, plant_id: str = PLANT_ID) -> MeasurementRead | None:
+    statement = (
+        select(Measurement)
+        .where(Measurement.plant_id == plant_id)
+        .order_by(Measurement.measured_at.desc())
+        .limit(1)
+    )
     model = session.scalar(statement)
     return None if model is None else to_read(model)
 
 
-def list_measurements(session: Session, limit: int) -> list[MeasurementRead]:
-    statement = select(Measurement).order_by(Measurement.measured_at.desc()).limit(limit)
+def list_measurements(
+    session: Session,
+    limit: int,
+    plant_id: str = PLANT_ID,
+) -> list[MeasurementRead]:
+    statement = (
+        select(Measurement)
+        .where(Measurement.plant_id == plant_id)
+        .order_by(Measurement.measured_at.desc())
+        .limit(limit)
+    )
     return [to_read(model) for model in session.scalars(statement)]
 
+
+def measurements_between(
+    session: Session,
+    start: datetime,
+    end: datetime,
+    plant_id: str = PLANT_ID,
+) -> list[MeasurementRead]:
+    """Mediciones en ``[start, end]`` ordenadas de la mas antigua a la mas nueva."""
+
+    statement = (
+        select(Measurement)
+        .where(
+            Measurement.plant_id == plant_id,
+            Measurement.measured_at >= start,
+            Measurement.measured_at <= end,
+        )
+        .order_by(Measurement.measured_at.asc())
+    )
+    return [to_read(model) for model in session.scalars(statement)]
