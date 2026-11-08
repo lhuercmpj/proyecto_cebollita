@@ -1,0 +1,21 @@
+{
+  "model_version": "tarea2-softmax-sin-periodo-v1",
+  "source_file": "modelo_cebollita.h",
+  "original_attachment_sha256": "1477A8D7947F8C6504B292FDF9D4D96B2D9BF4875F2A559DADF4EE7FD47277F1",
+  "repository_file_sha256": "0950B3D98919A8E0B486892515438561EEA03F277E3F8AD243A8652913A3131B",
+  "architecture": "dense-4-16-4-relu-softmax",
+  "input_order": [
+    "humedad_tierra",
+    "luz",
+    "humedad_aire",
+    "temp_promedio"
+  ],
+  "uses_periodo": false,
+  "classes": [
+    "Estoy bien",
+    "Preciso luz",
+    "Preciso agua",
+    "Estoy mal"
+  ],
+  "notes": "Encabezado generado por el notebook de la Tarea 2. No editar pesos manualmente."
+}
