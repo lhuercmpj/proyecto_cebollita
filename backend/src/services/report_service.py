@@ -14,26 +14,27 @@ ALERT_STATES = ("Preciso agua", "Preciso luz", "Estoy mal")
 OK_STATE = "Estoy bien"
 
 STATE_LINES = {
-    "Estoy bien": "Estoy re bien, gracias por cuidarme 🌿",
-    "Preciso luz": "Me vendría bárbaro un poco más de luz (indirecta, eh, que el sol directo me quema).",
-    "Preciso agua": "Tengo seeed... si me ves medio desmayada es por eso 💧",
-    "Estoy mal": "No me siento nada bien, ¿me das una mano? 🥀",
+    "Estoy bien": "Impecable, querido. Como debe ser 🌿",
+    "Preciso luz": "Necesito más luz. Indirecta, darling: el sol directo arruina mis hojas.",
+    "Preciso agua": "Me estoy desmayando de sed. Esto es inaceptable 💧",
+    "Estoy mal": "No estoy en mi mejor momento y eso no me gusta nada 🥀",
 }
 
 ALERT_TEXTS = {
     "Preciso agua": (
-        "💧 ¡Alerta de riego! Soy Cebollita y necesito agua.\n"
-        "Regame con agua a temperatura ambiente hasta que la tierra quede húmeda "
-        "(no encharcada) y tirá el agua que sobre en el plato."
+        "💧 ¡Alerta de riego! Cebollita necesita agua. Ahora, querido.\n"
+        "Agua a temperatura ambiente hasta que la tierra quede húmeda, no encharcada. "
+        "Y tirá lo que sobre en el plato: los pies mojados no son elegantes."
     ),
     "Preciso luz": (
-        "☀️ Cebollita acá: me falta luz.\n"
-        "Acercame a una ventana con luz brillante pero indirecta; el sol directo me quema las hojas."
+        "☀️ Cebollita necesita luz, darling.\n"
+        "Llevame cerca de una ventana con luz brillante pero indirecta. "
+        "El sol directo me quema las hojas, y eso no se negocia."
     ),
     "Estoy mal": (
-        "🥀 Cebollita no está bien.\n"
+        "🥀 Cebollita no está bien. Y no lo voy a permitir.\n"
         "Revisá la tierra, la luz y la temperatura del lugar. "
-        "Preguntame «¿cómo estás?» y te cuento qué ven mis sensores."
+        "Preguntame «¿cómo estás?» y te digo exactamente qué ven mis sensores."
     ),
 }
 
@@ -93,7 +94,7 @@ def format_alert(measurement: MeasurementRead, settings: Settings, reminder: boo
     state = measurement.prediction.state
     header = ALERT_TEXTS.get(state, f"⚠️ Estado: {state}")
     if reminder:
-        header = "🔁 Recordatorio: sigo igual.\n" + header
+        header = "🔁 Recordatorio: sigo igual, y sigo esperando.\n" + header
     return (
         f"{header}\n\n"
         f"Lectura de las {format_local(measurement.measured_at, settings)} — "
@@ -103,14 +104,14 @@ def format_alert(measurement: MeasurementRead, settings: Settings, reminder: boo
 
 def format_recovery(measurement: MeasurementRead, settings: Settings) -> str:
     return (
-        "🌿 ¡Ya estoy mejor! El modelo volvió a estimar «Estoy bien» "
-        f"en la lectura de las {format_local(measurement.measured_at, settings)}. Gracias 💚"
+        "🌿 ¡Ya estoy mejor! Fabulosa otra vez. El modelo volvió a estimar «Estoy bien» "
+        f"en la lectura de las {format_local(measurement.measured_at, settings)}. Bien hecho, querido 💚"
     )
 
 
 def format_device_error(settings: Settings) -> str:
     return (
-        "📡 No pude leer mis sensores en la última medición programada. "
-        "Revisá que la placa esté encendida y conectada al Wi-Fi. "
+        "📡 No pude leer mis sensores en la última medición programada. Inadmisible. "
+        "Revisá que la placa esté encendida y conectada al Wi-Fi, darling. "
         "Te aviso cuando vuelva a medir."
     )

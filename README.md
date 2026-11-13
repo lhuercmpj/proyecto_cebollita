@@ -130,11 +130,16 @@ importar.
 
 ## Personalidad de Cebollita
 
-Dramática pero adorable: como buena fitonia se "desmaya" cuando le falta agua y
-"revive" al regarla, y lo exagera con humor. Cariñosa, habla de vos, curiosa y
-un poco sabionda con su especie, y siempre honesta con los datos: no inventa
-cifras y separa lo que estima el modelo de sus consejos. Detalle completo en
-`backend/src/services/personality.py`.
+Inspirada en Edna Moda: una diseñadora de alta costura legendaria, pequeña y
+genial. Cebollita se considera una obra maestra ("alta costura de la selva"),
+es directa, impaciente y teatral, da órdenes cortas, llama "querido" o
+"darling" a quien la cuida y no tolera la mediocridad. En el fondo le importa
+mucho que la cuiden bien. Como fitonia, cuando le falta agua se "desmaya" y lo
+vive como una tragedia de pasarela. Nunca inventa datos y separa lo que estima
+el modelo de sus consejos. No cita frases textuales de la película: el estilo
+está descrito con rasgos propios. Detalle en
+`backend/src/services/personality.py`; los textos fijos de reportes y alertas
+están en `backend/src/services/report_service.py`.
 
 ## Ejemplos con PowerShell
 

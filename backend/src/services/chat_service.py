@@ -105,11 +105,11 @@ def fallback_answer(context: RetrievedContext) -> str:
     """Respuesta sin Gemini: solo datos guardados, con la voz de Cebollita."""
 
     if context.sensors.latest is None:
-        return "Ahora mismo no puedo pensar bien 🥴 y además todavía no tengo mediciones. Probá de nuevo en un rato."
+        return "Mi cerebro de IA no responde y todavía no tengo mediciones. Intolerable. Probá de nuevo en un rato, querido."
     latest = context.sensors.latest
     lines = [
-        "Ahora mismo no puedo pensar bien 🥴 (no pude conectarme a mi cerebro de IA), "
-        "pero esto dicen mis sensores:",
+        "Mi cerebro de IA no responde ahora mismo. Intolerable. "
+        "Pero los datos no mienten, darling. Esto dicen mis sensores:",
         f"Estado estimado por el modelo: {latest.prediction.state}",
         *sensor_lines(latest),
     ]
