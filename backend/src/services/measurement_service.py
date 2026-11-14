@@ -107,10 +107,21 @@ def save_measurement(
     return to_read(model), True
 
 
+def _real_sources(session: Session, plant_id: str):
+    """Si hay lecturas reales (ESP32 o historico), se ignoran las del simulador."""
+
+    has_real = session.scalar(
+        select(Measurement.measurement_id)
+        .where(Measurement.plant_id == plant_id, Measurement.source != "simulador")
+        .limit(1)
+    )
+    return Measurement.source != "simulador" if has_real else Measurement.source.is_not(None)
+
+
 def latest_measurement(session: Session, plant_id: str = PLANT_ID) -> MeasurementRead | None:
     statement = (
         select(Measurement)
-        .where(Measurement.plant_id == plant_id)
+        .where(Measurement.plant_id == plant_id, _real_sources(session, plant_id))
         .order_by(Measurement.measured_at.desc())
         .limit(1)
     )
@@ -125,7 +136,7 @@ def list_measurements(
 ) -> list[MeasurementRead]:
     statement = (
         select(Measurement)
-        .where(Measurement.plant_id == plant_id)
+        .where(Measurement.plant_id == plant_id, _real_sources(session, plant_id))
         .order_by(Measurement.measured_at.desc())
         .limit(limit)
     )
@@ -144,6 +155,7 @@ def measurements_between(
         select(Measurement)
         .where(
             Measurement.plant_id == plant_id,
+            _real_sources(session, plant_id),
             Measurement.measured_at >= start,
             Measurement.measured_at <= end,
         )

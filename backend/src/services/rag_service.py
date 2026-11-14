@@ -185,9 +185,15 @@ def history_overview(session: Session, settings: Settings) -> str:
         .where(Measurement.plant_id == settings.plant_id)
         .group_by(Measurement.source)
     ).all()
+    if any(r[0] != "simulador" for r in rows):
+        rows = [r for r in rows if r[0] != "simulador"]
     if not rows:
         return "Historial completo: sin mediciones guardadas."
-    names = {"esp32": "lecturas de la ESP32", "historico_tarea2": "dataset histórico de la Tarea 2 (limpio)"}
+    names = {
+        "esp32": "lecturas de la ESP32",
+        "historico_tarea2": "dataset histórico de la Tarea 2 (limpio)",
+        "simulador": "lecturas del simulador (datos de prueba, no de la planta)",
+    }
     lines = ["Historial completo guardado:"]
     first = min(as_utc_dt(r[2]) for r in rows)
     last = max(as_utc_dt(r[3]) for r in rows)

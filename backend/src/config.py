@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     gemini_embedding_model: str = "gemini-embedding-001"
     embedding_dimensions: int = 768
     gemini_temperature: float = Field(default=0.7, ge=0, le=2)
+    # Tiempo maximo por llamada; si se supera se prueba otro modelo Flash.
+    gemini_timeout_seconds: float = Field(default=20, gt=0)
+    # Nivel de razonamiento de los Flash nuevos (MINIMAL, LOW, MEDIUM, HIGH); vacio = el del modelo.
+    gemini_thinking_level: str = "LOW"
 
     # --- RAG ------------------------------------------------------------------
     references_dir: str = "data/references"

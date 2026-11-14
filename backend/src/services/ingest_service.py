@@ -41,4 +41,11 @@ def store_device_measurement(
         payload,
         backend_prediction_matches=prediction_matches(payload),
         plant_id=settings.plant_id,
+        source=device_source(settings),
     )
+
+
+def device_source(settings: Settings) -> str:
+    """Las lecturas del simulador se marcan aparte para no mezclarlas con la planta real."""
+
+    return "simulador" if "simulator" in settings.sensor_device_url.lower() else "esp32"
