@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     sensor_timeout_seconds: float = Field(default=20.0, gt=0)
 
     # Origenes (separados por coma) desde los que la pagina web puede llamar a la API.
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+    )
 
     # --- Medicion y reportes periodicos -------------------------------------
     report_interval_minutes: float = Field(default=30, gt=0)
