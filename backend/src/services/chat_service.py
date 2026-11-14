@@ -17,7 +17,12 @@ from src.db_models.rag import ChatMessage
 from src.services.domain_guard import classify
 from src.services.gemini_service import ChatTurn, GeminiError, LLMClient
 from src.services.personality import OUT_OF_DOMAIN_REPLIES, SYSTEM_PROMPT
-from src.services.rag_service import RetrievedContext, build_context, format_documents
+from src.services.rag_service import (
+    RetrievedContext,
+    build_context,
+    format_catalog,
+    format_documents,
+)
 from src.services.report_service import sensor_lines
 
 logger = logging.getLogger(__name__)
@@ -80,8 +85,10 @@ def build_prompt(context: RetrievedContext, question: str) -> str:
     return (
         "DATOS DE SENSORES (fuente de verdad para cualquier número):\n"
         f"{context.sensors.text}\n\n"
-        "CONOCIMIENTO CIENTÍFICO SOBRE MI ESPECIE (fragmentos recuperados):\n"
+        "CONOCIMIENTO CIENTÍFICO SOBRE MI ESPECIE (fragmentos recuperados para esta pregunta):\n"
         f"{format_documents(context.documents)}\n\n"
+        "FUENTES DISPONIBLES (todos los documentos indexados en mi base):\n"
+        f"{format_catalog(context.catalog)}\n\n"
         "PREGUNTA DEL USUARIO:\n"
         f"{question}"
     )

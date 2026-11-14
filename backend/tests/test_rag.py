@@ -97,3 +97,56 @@ def test_import_history_recomputes_prediction_and_skips_bad_rows(session, settin
     context = sensor_context(session, settings, now=BASE_TIME)
     assert "Preciso agua" in context.text
     assert "01/10/2026 10:00" in context.text  # se interpreta en hora de Montevideo
+
+
+def test_requested_periods_parses_days_and_months(settings):
+    from datetime import UTC, datetime
+
+    from src.services.rag_service import requested_periods
+
+    now = datetime(2026, 11, 14, 19, 0, tzinfo=UTC)
+    labels = lambda q: [p[0] for p in requested_periods(q, now, settings)]  # noqa: E731
+    assert labels("¿Cómo estuviste el 13 de octubre?") == ["Día 13/10/2026"]
+    assert labels("¿Qué pasó el 6/10?") == ["Día 06/10/2026"]
+    assert labels("¿Y en septiembre?") == ["Mes de septiembre 2026"]
+    assert labels("¿Cómo estás?") == []
+    # Un mes posterior a hoy se interpreta como del año anterior.
+    assert labels("¿Y en diciembre?") == ["Mes de diciembre 2025"]
+
+
+def test_context_includes_history_requested_month_labels_and_catalog(session, settings, fake_llm):
+    from datetime import UTC, datetime
+
+    from src.services.chat_service import build_prompt
+    from src.services.rag_service import build_context
+
+    rows = [
+        {"fecha_hora": "2026-09-10 10:00:00", "humedad_tierra": "930", "luz": "409", "humedad_aire": "66",
+         "temp_dht11": "20.4", "temp_lm35": "20.4", "temp_promedio": "20.4", "estado": "Preciso agua"},
+        {"fecha_hora": "2026-10-13 10:00:00", "humedad_tierra": "1600", "luz": "1200", "humedad_aire": "60",
+         "temp_dht11": "21", "temp_lm35": "21", "temp_promedio": "21", "estado": "Estoy bien"},
+    ]
+    import_rows(session, rows, settings)
+    ingest_directory(session, REFERENCES, fake_llm, settings)
+    now = datetime(2026, 11, 14, 19, 0, tzinfo=UTC)
+
+    context = build_context(session, fake_llm, "¿Cómo estuviste en septiembre? ¿Qué fuentes tenés?", settings, now)
+    prompt = build_prompt(context, "x")
+
+    assert "Mes de septiembre 2026 (1 mediciones" in prompt
+    assert "Etiquetas registradas por el grupo en el dataset: Preciso agua 1" in prompt
+    assert "Historial completo guardado:" in prompt
+    assert "dataset histórico de la Tarea 2 (limpio): 2 mediciones" in prompt
+    assert "Octubre 2026: 1 mediciones" in prompt
+    assert "FUENTES DISPONIBLES" in prompt and "Royal Horticultural Society" in prompt
+
+
+def test_questions_about_sources_and_history_pass_domain_filter():
+    from src.services.domain_guard import classify
+    from tests.conftest import FakeLLM
+
+    for question in ["¿Qué fuentes usás?", "¿De qué documentos sacás la info?", "¿Cómo estuviste en octubre?",
+                     "Mostrame tus datos históricos"]:
+        llm = FakeLLM(in_domain_answer="NO")
+        assert classify(question, llm).in_domain is True
+        assert llm.generate_calls == []
