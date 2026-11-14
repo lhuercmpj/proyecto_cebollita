@@ -5,6 +5,7 @@
 
 Columnas esperadas (nombres del proyecto): fecha_hora, humedad_tierra, luz,
 humedad_aire, temp_dht11, temp_lm35 y, opcionalmente, temp_promedio y estado.
+Si viene temp_promedio se usa tal cual; si no, se calcula como el firmware.
 ``fecha_hora`` se interpreta en la zona horaria de ``TIMEZONE``
 (America/Montevideo) salvo que traiga desfase propio.
 
@@ -95,8 +96,12 @@ def import_rows(
         if measured_at in existing:
             result.duplicated += 1
             continue
-        # Mismo calculo que el firmware y la Tarea 2.
-        t_avg = (t_dht + t_lm) / 2
+        # Si el CSV trae temp_promedio (dataset limpio: usa solo DHT11 cuando el
+        # LM35 tuvo un pico) se respeta; si no, mismo calculo que el firmware.
+        try:
+            t_avg = parse_float(row, "temp_promedio")
+        except ValueError:
+            t_avg = (t_dht + t_lm) / 2
         prediction = predict(humedad_tierra=soil, luz=light, humedad_aire=air, temp_promedio=t_avg)
         timestamp = int(measured_at.timestamp())
         if not dry_run:

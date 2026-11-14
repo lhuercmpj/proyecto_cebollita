@@ -1,4 +1,45 @@
 /*
+ * ===========================================================================
+ *  GUIA RAPIDA: QUE HAY QUE TOCAR PARA QUE CEBOLLITA LE ENVIE DATOS AL BOT
+ * ===========================================================================
+ *  La placa NO le habla al bot directamente. El backend (Docker, en la compu)
+ *  le pide una medicion a la ESP32 cada 30 minutos por Wi-Fi, la guarda y el
+ *  bot de Telegram manda el reporte y las alertas.
+ *
+ *  1) Librerias (Arduino IDE > Administrador de bibliotecas):
+ *     - Placa: "esp32" de Espressif (Administrador de placas)
+ *     - "DHT sensor library" (Adafruit) + "Adafruit Unified Sensor"
+ *     - "ArduinoJson" version 7
+ *
+ *  2) Modelo: poner el archivo modelo.h en ESTA MISMA carpeta (junto a este
+ *     .ino). Es una copia de models/modelo_cebollita.h renombrada a modelo.h.
+ *
+ *  3) Wi-Fi: cambiar WIFI_SSID y WIFI_PASS (mas abajo) por la red real.
+ *     Tiene que ser 2,4 GHz y la MISMA red que la compu donde corre Docker.
+ *
+ *  4) Pines: revisar que coincidan con el cableado (PIN_HUMEDAD_TIERRA 34,
+ *     PIN_DHT11 4, PIN_LM35 32, PIN_LUZ 33, LEDs 25/27/26).
+ *
+ *  5) Subir el sketch y abrir el Monitor Serie a 115200. Al conectarse
+ *     imprime "IP de la ESP32: 192.168.x.x". Anotar esa IP.
+ *     Prueba: abrir http://ESA_IP/api/salud en el navegador (devuelve JSON).
+ *
+ *  6) En la compu, en el archivo .env del repo, poner esa IP (sin barra final):
+ *        SENSOR_DEVICE_URL=http://192.168.x.x
+ *     y reiniciar desde la carpeta del repo:
+ *        docker compose up -d --force-recreate api scheduler
+ *
+ *  7) En Telegram, haber mandado /start al bot. Desde ahi llega un reporte
+ *     cada 30 min y una alerta si el modelo estima Preciso agua / Preciso luz /
+ *     Estoy mal. Medicion inmediata para probar (PowerShell):
+ *        Invoke-RestMethod -Method Post http://localhost:8000/api/measurements/request
+ *
+ *  Si la IP de la ESP32 cambia (router), repetir el paso 6. Conviene reservar
+ *  una IP fija para la placa en el router.
+ * ===========================================================================
+ */
+
+/*
  * Cebollita: backend -> HTTP -> sensores -> modelo local -> JSON.
  * Arduino ESP32 + DHT sensor library (Adafruit) + ArduinoJson 7.
  * Copiar el modelo.h REAL del entrenamiento junto a este .ino.
@@ -32,8 +73,8 @@
 #define MUESTRAS 30
 #define DELAY_ENTRE_MUESTRAS 300
 #define LM35_MAX_RAZONABLE 50.0f
-#define WIFI_SSID "TU_RED"
-#define WIFI_PASS "TU_CLAVE"
+#define WIFI_SSID "TU_RED"   // <-- CAMBIAR: nombre de la red Wi-Fi (2,4 GHz)
+#define WIFI_PASS "TU_CLAVE" // <-- CAMBIAR: clave de la red Wi-Fi
 #define ZONA_HORARIA "<-03>3"
 
 static_assert(N_SALIDAS == 4, "Revisar clases y LEDs para este modelo");
