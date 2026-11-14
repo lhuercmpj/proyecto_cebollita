@@ -2,6 +2,7 @@ x-backend-env: &backend-env
   DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cebollita}:${POSTGRES_PASSWORD:-cebollita_dev}@db:5432/${POSTGRES_DB:-cebollita}
   SENSOR_DEVICE_URL: ${SENSOR_DEVICE_URL:-http://simulator:8081}
   SENSOR_TIMEOUT_SECONDS: ${SENSOR_TIMEOUT_SECONDS:-20}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
   REPORT_INTERVAL_MINUTES: ${REPORT_INTERVAL_MINUTES:-30}
   STALE_MARGIN_MINUTES: ${STALE_MARGIN_MINUTES:-10}
   ALERT_REPEAT_MINUTES: ${ALERT_REPEAT_MINUTES:-180}
@@ -88,6 +89,17 @@ services:
     depends_on:
       api:
         condition: service_healthy
+
+  # Pagina web (build de produccion servido por nginx) en http://localhost:5173.
+  # Para desarrollar con recarga en vivo: npm run dev en frontend/ (puerto 5174).
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "5173:80"
+    restart: unless-stopped
 
 volumes:
   postgres_data:

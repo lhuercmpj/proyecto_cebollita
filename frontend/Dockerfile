@@ -1,0 +1,15 @@
+# Pagina de Cebollita: se compila con Vite y se sirve con nginx.
+
+FROM node:22-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+# La URL de la API se fija al compilar (la usa el navegador, no el contenedor).
+ARG VITE_API_URL=http://localhost:8000
+ENV VITE_API_URL=$VITE_API_URL
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80

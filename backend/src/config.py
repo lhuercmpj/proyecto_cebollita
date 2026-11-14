@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     # 10 s dejaba muy poco margen para la red y la serializacion.
     sensor_timeout_seconds: float = Field(default=20.0, gt=0)
 
+    # Origenes (separados por coma) desde los que la pagina web puede llamar a la API.
+    cors_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+    )
+
     # --- Medicion y reportes periodicos -------------------------------------
     report_interval_minutes: float = Field(default=30, gt=0)
     # Una lectura se considera atrasada si supera el intervalo mas este margen.
@@ -53,6 +58,10 @@ class Settings(BaseSettings):
     references_dir: str = "data/references"
     rag_top_k: int = Field(default=4, ge=1, le=20)
     chat_history_turns: int = Field(default=6, ge=0, le=30)
+
+    @property
+    def allowed_cors_origins(self) -> list[str]:
+        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
 
     @property
     def allowed_chat_ids(self) -> set[str]:

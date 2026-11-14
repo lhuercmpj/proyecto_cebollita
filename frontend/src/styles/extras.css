@@ -1,0 +1,314 @@
+/* Estilos de los componentes agregados despues del layout base (index.css). */
+
+/* ===== Reproductor: estilos de musica ===================================== */
+.music__styles { display: flex; flex-wrap: wrap; gap: 5px; }
+.music__styles button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(127, 170, 130, 0.16);
+  color: var(--ink);
+  transition: background 0.15s, transform 0.1s;
+}
+.music__styles button:hover { background: rgba(127, 170, 130, 0.3); }
+.music__styles button:active { transform: scale(0.95); }
+.music__styles button.is-active { background: var(--leaf-deep); color: var(--screen); }
+.music__disc { font-size: 1.25rem; }
+.music[data-style="jazz"] .music__disc { background: conic-gradient(from 0deg, #8a5a2b, #e7c48a, #8a5a2b); }
+.music[data-style="clasica"] .music__disc { background: conic-gradient(from 0deg, #5b5f97, #c9ccf0, #5b5f97); }
+/* Pop (girly): disco y boton activo en rosa */
+.music[data-style="pop"] .music__disc { background: conic-gradient(from 0deg, #f06aa6, #ffc2dc, #f06aa6); }
+.music[data-style="pop"] .music__styles button.is-active { background: #e0579a; color: #fff; }
+
+/* ===== Panel de mediciones ================================================ */
+.panel { flex: none; border-radius: 22px; padding: 12px; }
+.panel--empty { color: var(--ink-soft); font-size: 0.9rem; text-align: center; padding: 18px 12px; }
+.panel__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(127, 170, 130, 0.12);
+  min-width: 0;
+}
+.metric__label { font-size: 0.72rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metric__value { margin-top: 2px; font-size: 1.35rem; font-weight: 700; line-height: 1.15; }
+.metric__unit { margin-left: 2px; font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); }
+.metric__tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--ink-soft);
+  border: 1px solid var(--field-border);
+}
+.metric__bar { height: 4px; margin-top: 6px; border-radius: 999px; background: rgba(127, 170, 130, 0.22); overflow: hidden; }
+.metric__bar span { display: block; height: 100%; border-radius: inherit; background: var(--leaf); transition: width 0.6s ease; }
+.panel__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 0.78rem; }
+.panel__state { padding: 3px 10px; border-radius: 999px; font-weight: 700; background: rgba(95, 168, 116, 0.22); }
+.panel__state--luz { background: rgba(244, 196, 80, 0.3); }
+.panel__state--agua { background: rgba(90, 160, 230, 0.26); }
+.panel__state--mal { background: rgba(200, 90, 70, 0.26); }
+.panel__age { color: var(--ink-soft); white-space: nowrap; }
+.panel__age--stale { color: #b3541e; font-weight: 700; }
+
+/* ===== Planta con estados ================================================= */
+/* container-type: permite dimensionar la caja de la planta con cqw/cqh (unidades del propio contenedor). */
+.plantstage { --ground: 46px; --thought: 46px; container-type: size; position: relative; flex: 1; min-height: 0; transition: opacity 0.6s; }
+.plantstage--stale { opacity: 0.85; }
+/* Caja con la misma proporcion que las imagenes de la planta (1200x984), apoyada en el suelo
+   (abajo del todo, dejando `--ground` para la sombra) y lo mas grande que entre sin pisar el globo. */
+.plantstage__stage {
+  position: absolute;
+  left: 50%;
+  bottom: var(--ground);
+  width: min(100cqw, calc((100cqh - var(--thought) - var(--ground)) * 1.2195));
+  aspect-ratio: 1200 / 984;
+  transform: translateX(-50%);
+}
+.plantstage__sway {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  animation: sway 7s ease-in-out infinite;
+}
+@keyframes sway { 0%, 100% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.8deg); } }
+.plantstage--agua .plantstage__sway,
+.plantstage--mal .plantstage__sway { animation-duration: 11s; }
+.plantstage__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.plantstage__img.is-active { opacity: 1; }
+
+.thought {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 14px;
+  border-radius: 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  animation: bob 4s ease-in-out infinite;
+}
+.thought::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-right: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  transform: translateX(-50%) rotate(45deg);
+}
+.thought__icon { font-size: 1.15rem; }
+.thought__note { display: block; font-size: 0.68rem; font-weight: 600; color: #b3541e; }
+@keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+
+/* ===== Chat: hora, botones y tarjeta de datos ============================= */
+.bubble__time { display: block; margin-top: 3px; font-size: 0.64rem; opacity: 0.55; text-align: right; }
+.bubble--data { padding: 10px 12px 8px; width: 88%; max-width: 88%; }
+
+.chat__chips {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chat__chips::-webkit-scrollbar { display: none; }
+.chat__chips button {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--field-border);
+  background: var(--field);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+.chat__chips button:hover:not(:disabled) { background: var(--bubble-user); color: var(--bubble-user-ink); }
+.chat__chips button:active:not(:disabled) { transform: scale(0.95); }
+
+.mini__title { font-weight: 700; margin-bottom: 6px; }
+.mini__conf { font-weight: 600; opacity: 0.65; }
+.mini__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.85rem; }
+.mini__list li { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px dashed var(--bubble-bot-border); }
+.mini__list li:last-child { border-bottom: 0; }
+.mini__list em { font-style: normal; font-size: 0.68rem; font-weight: 600; opacity: 0.6; }
+.mini__age { margin-top: 6px; font-size: 0.72rem; opacity: 0.7; }
+
+/* ===== Particulas ========================================================= */
+.particle { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); border-radius: 50%; pointer-events: none; }
+
+/* Manana: polen que sube */
+.pollen { background: rgba(255, 236, 140, 0.85); box-shadow: 0 0 8px rgba(255, 230, 120, 0.8); animation: rise var(--d) linear var(--delay) infinite; }
+@keyframes rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15%, 85% { opacity: 0.9; }
+  100% { transform: translate(var(--dx), -34vh); opacity: 0; }
+}
+
+/* Tarde: motas doradas y petalos que caen */
+.mote { background: rgba(255, 214, 140, 0.9); box-shadow: 0 0 10px rgba(255, 190, 90, 0.9); animation: rise var(--d) linear var(--delay) infinite; }
+.petal {
+  width: var(--s);
+  height: calc(var(--s) * 0.55);
+  border-radius: 100% 0 100% 0;
+  background: rgba(224, 138, 70, 0.7);
+  animation: fall var(--d) linear var(--delay) infinite;
+}
+@keyframes fall {
+  0% { transform: translate(0, 0) rotate(0); opacity: 0; }
+  10%, 90% { opacity: 0.85; }
+  100% { transform: translate(var(--dx), 108vh) rotate(540deg); opacity: 0; }
+}
+
+/* Noche: luciernagas */
+.firefly {
+  background: #fff6a8;
+  box-shadow: 0 0 10px 3px rgba(240, 240, 110, 0.75);
+  animation: wander var(--d) ease-in-out var(--delay) infinite alternate, glow 3.2s ease-in-out var(--delay) infinite;
+}
+@keyframes wander { to { transform: translate(var(--dx), var(--dy)); } }
+@keyframes glow { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
+
+/* Mariposas (manana) */
+.butterfly { position: absolute; left: 0; animation: flutter var(--d) linear var(--delay) infinite; pointer-events: none; }
+@keyframes flutter {
+  0% { transform: translate(-8vw, 0); }
+  25% { transform: translate(24vw, -7vh); }
+  50% { transform: translate(52vw, 5vh); }
+  75% { transform: translate(80vw, -8vh); }
+  100% { transform: translate(110vw, 0); }
+}
+.wing { transform-box: view-box; transform-origin: 12px 10px; animation: flap 0.5s ease-in-out infinite alternate; }
+@keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(0.3); } }
+
+/* ===== Movil ============================================================== */
+@media (max-width: 760px) {
+  .panel { display: none; } /* en celular los datos se piden con el boton del chat */
+  .plantstage { flex: none; width: 72px; height: 90px; }
+  .plantstage { --ground: 8px; --thought: 0px; }
+  .thought { display: none; }
+  .music__styles button { padding: 4px 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle, .butterfly { display: none; }
+}
+
+/* Indicador de carga del boton de play */
+.music__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== Sombras del suelo segun la hora ==================================== */
+/* Mañana: sol alto a la izquierda -> sombra corta hacia la derecha. */
+:root {
+  --cast-color: #1f3d2a;
+  --cast-opacity: 0.24;
+  --cast-scale: 0.1;
+  --cast-skew: 16deg;
+  --cast-blur: 3px;
+  --contact-color: rgba(31, 61, 42, 0.5);
+  --contact-opacity: 0.8;
+  --contact-width: 50%;
+  --contact-x: 2%;
+}
+/* Tarde: sol bajo a la derecha -> sombra larga, calida, hacia la izquierda. */
+:root[data-theme="afternoon"] {
+  --cast-color: #6b3a10;
+  --cast-opacity: 0.34;
+  --cast-scale: 0.17;
+  --cast-skew: -55deg;
+  --cast-blur: 4px;
+  --contact-color: rgba(107, 58, 16, 0.55);
+  --contact-opacity: 0.85;
+  --contact-width: 56%;
+  --contact-x: -3%;
+}
+/* Noche: luz de luna tenue y azulada, hacia la izquierda. */
+:root[data-theme="night"] {
+  --cast-color: #020a12;
+  --cast-opacity: 0.5;
+  --cast-scale: 0.12;
+  --cast-skew: -22deg;
+  --cast-blur: 5px;
+  --contact-color: rgba(2, 10, 18, 0.7);
+  --contact-opacity: 0.9;
+  --contact-width: 50%;
+  --contact-x: -1%;
+}
+
+.plantstage__cast {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  /* scaleY negativo: refleja la silueta hacia abajo (sobre el suelo); skewX la inclina. */
+  transform: skewX(var(--cast-skew)) scaleY(calc(var(--cast-scale) * -1));
+  filter: blur(var(--cast-blur));
+  opacity: var(--cast-opacity);
+  transition: opacity 1s;
+  pointer-events: none;
+}
+.plantstage__castimg {
+  position: absolute;
+  inset: 0;
+  background: var(--cast-color);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.9s ease, background-color 1s;
+}
+.plantstage__castimg.is-active { opacity: 1; }
+
+/* Sombra de contacto: mancha suave justo debajo de la maceta. */
+.plantstage__contact {
+  position: absolute;
+  left: calc(50% + var(--contact-x));
+  bottom: 0;
+  width: var(--contact-width);
+  height: 10%;
+  transform: translate(-50%, 55%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--contact-color), transparent);
+  opacity: var(--contact-opacity);
+  pointer-events: none;
+}
+.plantstage--loading .plantstage__contact { opacity: 0; }

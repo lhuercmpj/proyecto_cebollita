@@ -1,0 +1,459 @@
+/* ===== Tokens: dia (por defecto) y noche ================================== */
+:root {
+  --bg: #fbf3e8;
+  --ink: #25502f;
+  --ink-soft: #6f8f68;
+  --leaf: #2f6b3c;
+  --leaf-deep: #25502f;
+  --sage: #bccfa8;
+  --glass: rgba(255, 252, 245, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --shadow: 0 8px 30px rgba(47, 107, 60, 0.12), 0 1px 2px rgba(47, 107, 60, 0.08);
+  --screen: #fdf8ef;
+  --bubble-user: #bccfa8;
+  --bubble-user-ink: #25502f;
+  --bubble-bot: #ffffff;
+  --bubble-bot-border: rgba(47, 107, 60, 0.1);
+  --send: #2f6b3c;
+  --field: #ffffff;
+  --field-border: rgba(47, 107, 60, 0.28);
+  --bezel: linear-gradient(145deg, #3a4a3d, #1b251d);
+  --font-body: "Nunito", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-title: "Lora", Georgia, serif;
+  color-scheme: light;
+}
+
+:root[data-theme="afternoon"] {
+  --bg: #fbe5c6;
+  --ink: #4a3b1f;
+  --ink-soft: #9a7a4c;
+  --leaf: #7a5b1e;
+  --leaf-deep: #5c4318;
+  --sage: #e3c88f;
+  --glass: rgba(255, 247, 232, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --shadow: 0 8px 30px rgba(150, 100, 40, 0.18), 0 1px 2px rgba(150, 100, 40, 0.1);
+  --screen: #fff6e6;
+  --bubble-user: #f0cf94;
+  --bubble-user-ink: #4a3b1f;
+  --bubble-bot: #ffffff;
+  --bubble-bot-border: rgba(150, 100, 40, 0.12);
+  --send: #c98a2e;
+  --field: #ffffff;
+  --field-border: rgba(150, 100, 40, 0.3);
+  --bezel: linear-gradient(145deg, #4a3d2c, #231c12);
+}
+
+:root[data-theme="night"] {
+  --bg: #0d1b2a;
+  --ink: #e4eedf;
+  --ink-soft: #8fa996;
+  --leaf: #7fbf8e;
+  --leaf-deep: #a9d8b3;
+  --sage: #3f7a52;
+  --glass: rgba(24, 42, 48, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --screen: #101f22;
+  --bubble-user: #3f7a52;
+  --bubble-user-ink: #f2fbef;
+  --bubble-bot: #1d3236;
+  --bubble-bot-border: rgba(255, 255, 255, 0.07);
+  --send: #5fa874;
+  --field: #1a2d31;
+  --field-border: rgba(255, 255, 255, 0.14);
+  --bezel: linear-gradient(145deg, #2c3a42, #0b1114);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.8s, color 0.8s;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
+:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+
+/* ===== Cielo (fondo) ===================================================== */
+.sky { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.sky__layer { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+:root[data-theme="morning"] .sky__morning,
+:root[data-theme="afternoon"] .sky__afternoon,
+:root[data-theme="night"] .sky__night { opacity: 1; }
+
+.sky__morning {
+  background:
+    radial-gradient(60% 40% at 8% 100%, rgba(188, 207, 168, 0.6), transparent 70%),
+    radial-gradient(50% 35% at 100% 100%, rgba(188, 207, 168, 0.45), transparent 70%),
+    linear-gradient(180deg, #d6ebf0 0%, #eef5ea 38%, #fbf3e8 100%);
+}
+.sky__afternoon {
+  background:
+    radial-gradient(60% 40% at 0% 100%, rgba(214, 150, 90, 0.35), transparent 70%),
+    linear-gradient(180deg, #f7cf9b 0%, #fbdcb4 35%, #f9e2c2 70%, #efd2ad 100%);
+}
+
+.sun {
+  position: absolute;
+  border-radius: 50%;
+}
+.sun--morning {
+  top: -110px;
+  left: 12%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(255, 244, 190, 0.95), rgba(255, 244, 214, 0) 68%);
+}
+.sun--afternoon {
+  top: 12%;
+  right: 3%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, #fff3c4 0 40%, #ffd58a 62%, rgba(255, 190, 110, 0) 72%);
+  box-shadow: 0 0 120px 70px rgba(255, 176, 90, 0.35);
+}
+
+.cloud {
+  position: absolute;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  filter: blur(9px);
+  animation: drift 90s linear infinite alternate;
+}
+.sky__afternoon .cloud { background: rgba(255, 238, 214, 0.7); }
+.cloud--a { top: 14%; left: 6%; width: 190px; }
+.cloud--b { top: 30%; left: 52%; width: 240px; animation-duration: 120s; }
+.cloud--c { top: 8%; left: 66%; width: 150px; animation-duration: 100s; }
+@keyframes drift { to { transform: translateX(80px); } }
+
+.sky__night {
+  background:
+    radial-gradient(60% 40% at 10% 100%, rgba(63, 122, 82, 0.35), transparent 70%),
+    linear-gradient(180deg, #08111d 0%, #0f2230 55%, #153a35 100%);
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation: twinkle ease-in-out infinite;
+}
+@keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+.moon {
+  position: absolute;
+  top: 9%;
+  right: 8%;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #f6efd2;
+  box-shadow: 0 0 40px 8px rgba(246, 239, 210, 0.35), inset -14px -8px 0 rgba(200, 190, 150, 0.35);
+}
+
+/* ===== Layout ============================================================ */
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "header header" "side main";
+  column-gap: clamp(16px, 5vw, 80px);
+  padding: 0 clamp(16px, 4vw, 48px) 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.app__header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0 8px;
+}
+.app__greeting { margin: 2px 0 0; font-size: 0.95rem; color: var(--ink-soft); }
+.app__header h1 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  transition: transform 0.1s;
+}
+.theme-toggle:active { transform: scale(0.92); }
+
+.app__side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.app__main {
+  grid-area: main;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Vidrio estilo iOS ================================================= */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+/* ===== Reproductor ======================================================= */
+.music {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 22px;
+}
+.music__row { display: flex; align-items: center; gap: 12px; }
+.music__player { position: absolute; width: 0; height: 0; overflow: hidden; }
+.music__disc {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 1.2rem;
+  background: conic-gradient(from 0deg, #2f6b3c, #bccfa8, #2f6b3c);
+}
+.music__disc--spin { animation: spin 6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.music__info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.music__label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+.music__title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.music__controls { display: flex; gap: 6px; }
+.music__controls button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(127, 170, 130, 0.18);
+  color: var(--leaf-deep);
+  transition: background 0.15s, transform 0.1s;
+}
+.music__controls button:hover:not(:disabled) { background: rgba(127, 170, 130, 0.32); }
+.music__controls button:active:not(:disabled) { transform: scale(0.92); }
+
+/* ===== Celular =========================================================== */
+.phone {
+  /* Ocupa todo el alto disponible, con proporcion de celular. */
+  height: 100%;
+  max-height: 760px;
+  aspect-ratio: 9 / 18.5;
+  max-width: 100%;
+  padding: 11px;
+  border-radius: 54px;
+  background: var(--bezel);
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.28),
+    0 0 0 1.5px rgba(255, 255, 255, 0.14) inset,
+    0 0 0 3px rgba(0, 0, 0, 0.35);
+}
+
+.phone__screen {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 44px;
+  overflow: hidden;
+  background: var(--screen);
+  transition: background 0.8s;
+}
+
+.phone__island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 92px;
+  height: 27px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #000;
+  z-index: 2;
+}
+
+.phone__status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px 4px 32px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.phone__icons { display: flex; align-items: center; gap: 6px; }
+
+.phone__header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 18px 10px;
+  border-bottom: 1px solid var(--bubble-bot-border);
+}
+.phone__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 30%;
+  background: radial-gradient(circle, rgba(188, 207, 168, 0.6), rgba(188, 207, 168, 0.15));
+}
+.phone__name { font-weight: 700; line-height: 1.2; }
+.phone__sub { font-size: 0.75rem; color: var(--ink-soft); }
+
+.phone__home {
+  flex: none;
+  width: 36%;
+  height: 5px;
+  margin: 8px auto 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  opacity: 0.35;
+}
+
+/* ===== Chat (dentro del celular) ========================================= */
+.chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+.chat__messages {
+  flex: 1;
+  min-height: 0;
+  list-style: none;
+  margin: 0;
+  padding: 14px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.chat__messages::-webkit-scrollbar { display: none; }
+
+.bubble {
+  max-width: 80%;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  line-height: 1.38;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: pop 0.22s ease-out;
+}
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+
+.bubble--user {
+  align-self: flex-end;
+  background: var(--bubble-user);
+  color: var(--bubble-user-ink);
+  border-bottom-right-radius: 6px;
+}
+.bubble--bot {
+  align-self: flex-start;
+  background: var(--bubble-bot);
+  border: 1px solid var(--bubble-bot-border);
+  border-bottom-left-radius: 6px;
+}
+.bubble--error { color: #8a3b2e; background: #f6dcd3; border-color: transparent; }
+
+.bubble--typing { display: flex; gap: 4px; padding: 14px 16px; }
+.bubble--typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  animation: blink 1.2s infinite ease-in-out;
+}
+.bubble--typing span:nth-child(2) { animation-delay: 0.15s; }
+.bubble--typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+
+.chat__form {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 12px 0;
+  padding: 5px 5px 5px 16px;
+  border-radius: 999px;
+  background: var(--field);
+  border: 1px solid var(--field-border);
+}
+.chat__form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px; /* evita el zoom automatico en iOS */
+  color: var(--ink);
+}
+.chat__form input::placeholder { color: var(--ink-soft); }
+.chat__form input:focus { outline: none; }
+.chat__form:focus-within { border-color: var(--leaf); }
+.chat__form button {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--send);
+  color: #fff;
+}
+
+/* ===== Movil: el celular ocupa la pantalla ================================ */
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: "header" "side" "main";
+    row-gap: 12px;
+    padding-bottom: 12px;
+  }
+  .app__header { padding-top: 16px; }
+  .app__side { flex-direction: row; align-items: center; gap: 12px; }
+  .music { flex: 1; min-width: 0; }
+  .phone { max-height: none; aspect-ratio: auto; width: 100%; padding: 6px; border-radius: 36px; }
+  .phone__screen { border-radius: 30px; }
+  .phone__island { top: 8px; width: 78px; height: 22px; }
+  .moon { width: 56px; height: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

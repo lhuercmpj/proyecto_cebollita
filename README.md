@@ -1,7 +1,8 @@
 # Maceta Inteligente — Cebollita
 
-Backend de la Tarea 3: chatbot de Telegram con Gemini y RAG para Cebollita, una
-fitonia (*Fittonia albivenis*) con sensores conectados a una ESP32.
+Chatbot de Telegram con Gemini y RAG, y una página web, para Cebollita, una
+fitonia (_Fittonia albivenis_) con sensores conectados a una ESP32. El backend
+(`backend/`) corresponde a la Tarea 3; la página (`frontend/`) es React + Vite.
 
 ## Qué hace
 
@@ -21,13 +22,17 @@ fitonia (*Fittonia albivenis*) con sensores conectados a una ESP32.
 - **RAG**: historial de sensores por consultas SQL y documentos científicos
   indexados en pgvector con embeddings de Gemini.
 - Modelo de la Tarea 2 replicado en Python y validado contra sus 12 vectores.
+- **Página web** (`frontend/`): chat con Cebollita dentro de un celular, planta
+  que cambia según el estado del modelo, panel con las últimas mediciones,
+  fondo según la hora (mañana, tarde, noche) y reproductor de música. Ver
+  [Página web](#página-web-frontend).
 
 ## Inicio rápido
 
 1. Copiar `.env.example` a `.env` y completar `GEMINI_API_KEY` y
    `TELEGRAM_BOT_TOKEN` (ver abajo). Sin claves todo funciona igual, pero no se
    envían mensajes y el chat responde solo con los datos de los sensores.
-2. Levantar base, simulador, API y programador:
+2. Levantar base, simulador, API, programador y página web:
 
    ```powershell
    docker compose up --build
@@ -48,7 +53,8 @@ fitonia (*Fittonia albivenis*) con sensores conectados a una ESP32.
 5. En Telegram, abrir el bot y enviar `/start`: ese chat queda suscripto a los
    reportes y alertas.
 
-Swagger: <http://localhost:8000/docs>.
+Swagger: <http://localhost:8000/docs>. Página web: <http://localhost:5173>
+(ver [Página web](#página-web-frontend)).
 
 > Si ya tenían la base creada con la versión anterior, recrearla para que se
 > agreguen las columnas y tablas nuevas: `docker compose down -v` (borra los
@@ -56,25 +62,71 @@ Swagger: <http://localhost:8000/docs>.
 
 ## Claves necesarias
 
-| Variable | Cómo obtenerla |
-| --- | --- |
-| `TELEGRAM_BOT_TOKEN` | Hablar con [@BotFather](https://t.me/BotFather), `/newbot`, copiar el token. |
-| `GEMINI_API_KEY` | Crear una key en <https://aistudio.google.com/apikey>. |
-| `TELEGRAM_CHAT_ID` | Opcional: chat fijo que siempre recibe los reportes. |
-| `TELEGRAM_ALLOWED_CHAT_IDS` | Opcional: lista de chats que pueden suscribirse. |
+| Variable                    | Cómo obtenerla                                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `TELEGRAM_BOT_TOKEN`        | Hablar con [@BotFather](https://t.me/BotFather), `/newbot`, copiar el token.                                                         |
+| `GEMINI_API_KEY`            | Crear una key en <https://aistudio.google.com/apikey>.                                                                               |
+| `TELEGRAM_CHAT_ID`          | Opcional: chat fijo que siempre recibe los reportes.                                                                                 |
+| `TELEGRAM_ALLOWED_CHAT_IDS` | Opcional: lista de chats que pueden suscribirse.                                                                                     |
+| `CORS_ORIGINS`              | Orígenes de la página web que pueden llamar a la API, separados por coma. Por defecto los puertos 5173 (Docker) y 5174 (`npm run dev`), en `localhost` y `127.0.0.1`. |
 
 `GEMINI_MODEL` usa por defecto el alias `gemini-flash-latest` (el Flash estable
-vigente). Se puede fijar una versión concreta si hace falta.
+vigente). Se puede fijar una versión concreta si hace falta: si el alias
+responde `503` (alta demanda) o `429` (cuota), probar con un modelo concreto,
+por ejemplo `GEMINI_MODEL=gemini-3.5-flash`, y recrear la API con
+`docker compose up -d api`.
 
 ## Servicios
 
-| Servicio | Puerto | Uso |
-| --- | ---: | --- |
-| `api` | 8000 | Backend, Swagger y `POST /api/chat` |
-| `simulator` | 8081 | Contrato HTTP de la ESP32 |
-| `db` | 5433 | PostgreSQL + pgvector |
-| `scheduler` | — | Medición, reporte y alertas cada 30 min (una sola instancia) |
-| `bot` | — | Bot de Telegram por polling (perfil `telegram`) |
+| Servicio    | Puerto | Uso                                                                 |
+| ----------- | -----: | ------------------------------------------------------------------- |
+| `api`       |   8000 | Backend, Swagger, `POST /api/chat` y `GET /api/measurements/latest` |
+| `simulator` |   8081 | Contrato HTTP de la ESP32                                           |
+| `db`        |   5433 | PostgreSQL + pgvector                                               |
+| `scheduler` |      — | Medición, reporte y alertas cada 30 min (una sola instancia)        |
+| `bot`       |      — | Bot de Telegram por polling (perfil `telegram`)                     |
+| `frontend`  |   5173 | Página web (build de producción servido por nginx)                  |
+
+## Página web (frontend)
+
+React + Vite en `frontend/`. Los detalles (organización, scripts y cómo
+regenerar imágenes y música) están en [`frontend/instrucciones.md`](frontend/instrucciones.md).
+
+Sale junto con el resto con `docker compose up --build` y queda en
+<http://localhost:5173>. Para levantar solo la página: `docker compose up -d --build frontend`.
+La URL de la API que usa el navegador se fija al compilar (`VITE_API_URL` en el
+`.env`, por defecto `http://localhost:8000`): si la cambian, reconstruir con
+`docker compose up -d --build frontend`.
+
+Para desarrollar con recarga en vivo se corre Vite localmente (requiere Node
+20.19+), en el puerto 5174, sin apagar nada: puede convivir con el contenedor.
+
+```powershell
+cd frontend
+npm install
+copy .env.example .env   # VITE_API_URL=http://localhost:8000
+npm run dev              # http://localhost:5174
+```
+
+Si la página corre en otro origen, agregarlo a `CORS_ORIGINS`.
+
+- **Chat** en un celular, con botones de sugerencia, hora por mensaje y una
+  tarjeta con las lecturas. Usa `POST /api/chat`, el mismo servicio que el bot.
+- **Planta con estados**: cuatro versiones (`Estoy bien`, `Preciso luz`,
+  `Preciso agua`, `Estoy mal`) según la última predicción, con una burbuja que
+  dice qué le pasa.
+- **Panel de mediciones**, consultado cada minuto a `/api/measurements/latest`.
+  Marca la lectura como atrasada pasados 40 minutos. Si todavía no hay
+  mediciones muestra «Esperando mis datos…».
+- **Fondo según la hora**: mañana (6–12), tarde (12–19) y noche (19–6), con
+  saludo, partículas y sombra de la planta en el suelo. `?tema=manana`,
+  `?tema=tarde` o `?tema=noche` fuerza uno.
+- **Música**: jazz, bossa, clásica y pop, con listas fijas de temas de YouTube
+  (no hay archivos .mp3 en el proyecto).
+
+La humedad de la tierra y la luz se muestran como lecturas crudas (0–4095, sin
+calibrar), nunca como porcentaje. La página no guarda claves: solo usa
+`VITE_API_URL`.
 
 ## Flujo cada 30 minutos
 
@@ -89,7 +141,7 @@ vigente). Se puede fijar una versión concreta si hace falta.
    medición y avisa una sola vez por racha de fallos.
 
 Al reiniciarse no se envían de golpe los reportes omitidos: se mide una vez y se
-retoma el ritmo normal. El programador toma un *advisory lock* de PostgreSQL,
+retoma el ritmo normal. El programador toma un _advisory lock_ de PostgreSQL,
 así que una segunda instancia termina sola.
 
 Las mediciones que llegan por la API (`/api/measurements` y
@@ -186,15 +238,15 @@ ninguna clave para correrlos.
 
 ## Tablas
 
-| Tabla | Contenido |
-| --- | --- |
-| `measurements` | Lecturas (ESP32 o histórico), predicción y JSON original |
-| `telegram_subscribers` | Chats que hicieron `/start` |
-| `alert_states` | Última alerta enviada y fallos seguidos del dispositivo |
-| `job_runs` | Cada ejecución del programador |
-| `notification_logs` | Cada mensaje automático enviado o fallido |
-| `document_chunks` | Fragmentos científicos con embedding (pgvector) |
-| `chat_messages` | Conversaciones (memoria del chat y logs para el informe) |
+| Tabla                  | Contenido                                                |
+| ---------------------- | -------------------------------------------------------- |
+| `measurements`         | Lecturas (ESP32 o histórico), predicción y JSON original |
+| `telegram_subscribers` | Chats que hicieron `/start`                              |
+| `alert_states`         | Última alerta enviada y fallos seguidos del dispositivo  |
+| `job_runs`             | Cada ejecución del programador                           |
+| `notification_logs`    | Cada mensaje automático enviado o fallido                |
+| `document_chunks`      | Fragmentos científicos con embedding (pgvector)          |
+| `chat_messages`        | Conversaciones (memoria del chat y logs para el informe) |
 
 ## Pendiente
 
@@ -202,4 +254,3 @@ ninguna clave para correrlos.
 - Indexar los documentos con la key (`python -m src.rag.ingest`).
 - Importar el dataset histórico limpio.
 - Probar con la ESP32 real.
-- Frontend React (opcional según la letra).
