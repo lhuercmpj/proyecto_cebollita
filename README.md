@@ -247,10 +247,3 @@ ninguna clave para correrlos.
 | `notification_logs`    | Cada mensaje automático enviado o fallido                |
 | `document_chunks`      | Fragmentos científicos con embedding (pgvector)          |
 | `chat_messages`        | Conversaciones (memoria del chat y logs para el informe) |
-
-## Pendiente
-
-- Probar con el token de Telegram y la key de Gemini reales y ajustar el prompt.
-- Indexar los documentos con la key (`python -m src.rag.ingest`).
-- Importar el dataset histórico limpio.
-- Probar con la ESP32 real.
